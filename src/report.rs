@@ -1,6 +1,8 @@
 use std::{cell::RefCell, ops::Deref};
 
-#[derive(Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Report {
     file: String,
     void: RefCell<Vec<usize>>,

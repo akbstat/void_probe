@@ -184,5 +184,11 @@ mod pdf_reader_test {
         let r = PDFReader::new(p).unwrap();
         let content = r.content();
         assert_eq!(17, content.len());
+        let p = Path::new(
+            r"D:\Studies\ak112\303\stats\CSR\product\output\bk\f-14-02-01-04-inve-pfs-for-fas.pdf",
+        );
+        let r = PDFReader::new(p).unwrap();
+        let content = r.content();
+        assert_eq!(1, content.len())
     }
 }

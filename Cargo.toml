@@ -13,3 +13,4 @@ crossbeam-channel = "0.5.11"
 regex = "1.10.3"
 lopdf = "0.32.0"
 flate2 = "1.0.28"
+serde = { version = "1", features = ["derive"] }

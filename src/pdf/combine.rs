@@ -137,7 +137,7 @@ fn combine_one_output(source: &[PathBuf], dest: &Path) -> anyhow::Result<()> {
 
     // If no "Pages" object found abort
     if pages_object.is_none() {
-        println!("Pages root not found.");
+        // println!("Pages root not found.");
         return Ok(());
     }
 
@@ -155,7 +155,7 @@ fn combine_one_output(source: &[PathBuf], dest: &Path) -> anyhow::Result<()> {
 
     // If no "Catalog" found abort
     if catalog_object.is_none() {
-        println!("Catalog root not found.");
+        // println!("Catalog root not found.");
 
         return Ok(());
     }

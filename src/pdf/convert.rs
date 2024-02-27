@@ -1,18 +1,28 @@
 use anyhow::Result;
 use std::{
-    fs,
+    env, fs,
     path::{Path, PathBuf},
     thread::spawn,
 };
 
-const WORKER_NUMER: usize = 6;
+const WORKER_NUMBER_ENV: &str = "MK_WORD_WORKER";
 
 pub struct PDFConverter {
     tasks: Vec<(PathBuf, PathBuf)>,
+    worker_number: usize,
 }
 
 impl PDFConverter {
     pub fn new(dir: &Path) -> Result<PDFConverter> {
+        let worker_number: usize = if let Ok(worker) = env::var(WORKER_NUMBER_ENV) {
+            if let Ok(n) = worker.parse::<usize>() {
+                n
+            } else {
+                6
+            }
+        } else {
+            6
+        };
         let mut rtfs = vec![];
         let mut tasks = vec![];
         if dir.is_file() {
@@ -36,11 +46,14 @@ impl PDFConverter {
                 }
             }
         }
-        Ok(PDFConverter { tasks })
+        Ok(PDFConverter {
+            tasks,
+            worker_number,
+        })
     }
     pub fn convert(&self) -> Result<()> {
         let tasks = self.tasks.clone();
-        let task_numer_per_group = tasks.len() / WORKER_NUMER + 1;
+        let task_numer_per_group = tasks.len() / self.worker_number + 1;
         let mut task_groups: Vec<Vec<(PathBuf, PathBuf)>> = vec![];
         let mut start = 0;
         while start < tasks.len() {
@@ -54,7 +67,7 @@ impl PDFConverter {
         }
         let (s, r) = crossbeam_channel::unbounded::<Vec<(PathBuf, PathBuf)>>();
         let mut handles = vec![];
-        for _ in 0..WORKER_NUMER {
+        for _ in 0..self.worker_number {
             // println!("worker {} is running", i);
             let rx = r.clone();
             let h = spawn(move || loop {

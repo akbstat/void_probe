@@ -20,7 +20,7 @@ pub fn probe(pdf_path: &Path) -> anyhow::Result<Report> {
             if row.is_empty() {
                 continue;
             }
-            if !(row.starts_with("康方") || row.starts_with("Akeso")) {
+            if !(row.contains("康方") || row.to_uppercase().starts_with("AKESO")) {
                 r.append_void(page_number + 1);
             }
             break;

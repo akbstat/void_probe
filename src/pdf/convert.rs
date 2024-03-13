@@ -6,6 +6,7 @@ use std::{
 };
 
 const WORKER_NUMBER_ENV: &str = "MK_WORD_WORKER";
+const SCRIPT_PATH: &str = "MK_TEMP_SCRIPT";
 
 pub struct PDFConverter {
     tasks: Vec<(PathBuf, PathBuf)>,
@@ -72,7 +73,8 @@ impl PDFConverter {
             let rx = r.clone();
             let h = spawn(move || loop {
                 if let Ok(task) = rx.recv() {
-                    if let Err(_) = rtf2pdf::rtf2pdf(task) {
+                    let script_path = env::var(SCRIPT_PATH).unwrap();
+                    if let Err(_) = rtf2pdf::rtf2pdf(task, Path::new(&script_path)) {
                         // println!("ERROR: worker {} is crash", i);
                         return;
                     };

@@ -15,6 +15,8 @@ use std::{
 };
 
 const PAGE_SIZE: usize = 50;
+const PROCESS: &str = "process";
+const RESULT: &str = "result";
 
 mod pdf;
 mod probe;
@@ -33,22 +35,29 @@ pub fn void_probe(rtfs: &[PathBuf]) -> Result<Vec<Report>> {
     })
     .join(r".temp");
 
+    let process_dir = temp.join(PROCESS);
+    let result_dir = temp.join(RESULT);
+
+    make_sure_dir_existed(&process_dir)?;
+    fs::remove_dir_all(&process_dir)?;
+    make_sure_dir_existed(&result_dir)?;
+
     for rtf in rtfs.iter() {
         if !rtf.exists() || rtf.is_dir() {
             todo!()
         }
         if let Some(divider) = RTFDivider::new(&rtf)? {
-            divider.set_pagesize(PAGE_SIZE).divide(temp.as_path())?;
+            divider.set_pagesize(PAGE_SIZE).divide(&process_dir)?;
         }
     }
 
-    let converter = PDFConverter::new(&temp)?;
+    let converter = PDFConverter::new(&process_dir)?;
     converter.convert()?;
 
-    let combiner = PDFCombiner::new(&temp)?;
-    combiner.combine_output(&temp)?;
+    let combiner = PDFCombiner::new(&process_dir)?;
+    combiner.combine_output(&result_dir)?;
 
-    let pdfs = find_pdf_in_dir(temp.as_path())?;
+    let pdfs = find_pdf_in_dir(&result_dir)?;
 
     for (_, pdf) in pdfs.iter().enumerate() {
         let report = probe(pdf)?;
@@ -71,14 +80,28 @@ fn find_pdf_in_dir(p: &Path) -> Result<Vec<PathBuf>> {
     Ok(pdfs)
 }
 
+fn make_sure_dir_existed(p: &Path) -> Result<()> {
+    if !p.exists() {
+        fs::create_dir_all(p)?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
-    use std::{fs, path::Path};
+    use std::{env, fs, path::Path};
 
     use super::*;
     #[test]
     fn probe_test() {
-        let dir = Path::new(r"D:\Studies\ak112\303\stats\CSR\product\output");
+        const WORKER_NUMBER_ENV: &str = "MK_WORD_WORKER";
+        const SCRIPT_PATH: &str = "MK_TEMP_SCRIPT";
+        env::set_var(WORKER_NUMBER_ENV, "5");
+        env::set_var(
+            SCRIPT_PATH,
+            r"D:\Users\yuqi01.chen\.temp\app\mobiuskit\void_probe",
+        );
+        let dir = Path::new(r"D:\Studies\ak112\303\stats\CSR\product\output\测试");
         let mut rtfs = vec![];
         for entry in fs::read_dir(dir).unwrap() {
             let entry = entry.unwrap();

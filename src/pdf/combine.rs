@@ -9,6 +9,7 @@ use regex::Regex;
 
 pub struct PDFCombiner {
     outputs: HashMap<String, Vec<String>>,
+    process_dir: PathBuf,
 }
 
 impl PDFCombiner {
@@ -31,14 +32,17 @@ impl PDFCombiner {
                 outputs.insert(output.to_string(), parts.to_vec()).unwrap();
             }
         }
-        Ok(PDFCombiner { outputs })
+        Ok(PDFCombiner {
+            outputs,
+            process_dir: PathBuf::from(dir),
+        })
     }
     pub fn combine_output(&self, dest: &Path) -> anyhow::Result<()> {
         for (output, parts) in self.outputs.clone() {
             let output_path = PathBuf::from(dest).join(format!("{}.pdf", output));
             let parts = parts
                 .iter()
-                .map(|f| PathBuf::from(dest).join(Path::new(f)))
+                .map(|f| self.process_dir.join(Path::new(f)))
                 .collect::<Vec<PathBuf>>();
             combine_one_output(&parts, output_path.as_path())?;
             parts.iter().for_each(|f| fs::remove_file(f).unwrap());
